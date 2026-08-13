@@ -1,0 +1,115 @@
+================================================================================
+           AUTOMATED PILLBOX FOR ELDERLY MEDICATION ADHERENCE
+                    BLYNK IOT CLOUD SPECIFICATIONS MAP
+================================================================================
+
+This document details the definitive Datastream configuration and hardware mapping
+for the Blynk IoT cloud architecture, alongside the implementation blueprint for
+the push notification event management system.
+
+--------------------------------------------------------------------------------
+1. VIRTUAL PINS & WIDGET CONFIGURATION MAP
+--------------------------------------------------------------------------------
+
+[SECTION A: COMPLIANCE MONITORING & REAL-TIME ANALYTICS]
+
+* Virtual Pin: V15
+  - Widget Type: Terminal
+  - Data Type: String
+  - Purpose: Medical Compliance Logbook
+  - Description: Serves as the central interface for real-time edge analytics. 
+    Whenever a patient safely disposes of a pill and the load cell array stabilizes, 
+    the Raspberry Pi Pico W pushes a comprehensive localized report directly to this 
+    terminal widget, logging the exact schedule time, actual taken time, remaining 
+    pill count, and calculated delay metrics in minutes.
+
+[SECTION B: PATIENT ADHERENCE Schedulers (READ-ONLY INTERFACE)]
+
+* Virtual Pin: V4
+  - Widget Type: Labeled Value / Value Display
+  - Data Type: String
+  - Label Title: "Box 1 Next Alarm"
+  - Description: Displays the upcoming pre-programmed medication schedule for the 
+    first medicine compartment. Computed locally by the microcontroller using edge logic.
+
+* Virtual Pin: V5
+  - Widget Type: Labeled Value / Value Display
+  - Data Type: String
+  - Label Title: "Box 2 Next Alarm"
+  - Description: Displays the upcoming pre-programmed medication schedule for the 
+    second medicine compartment.
+
+[SECTION C: DIGITAL INVENTORY / SCALE TELEMETRY]
+
+* Virtual Pin: V2
+  - Widget Type: Labeled Value / Gauge
+  - Data Type: Integer (Min: 0, Max: 20)
+  - Label Title: "Box 1 Pill Count"
+  - Description: Reflects the discrete pill count verified by the quantized weight 
+    telemetry from the HX711 Load Cell Amplifier linked to the first compartment.
+
+* Virtual Pin: V3
+  - Widget Type: Labeled Value / Gauge
+  - Data Type: Integer (Min: 0, Max: 20)
+  - Label Title: "Box 2 Pill Count"
+  - Description: Reflects the discrete pill count verified by the quantized weight 
+    telemetry from the HX711 Load Cell Amplifier linked to the second compartment.
+
+[SECTION D: REMOTE MEDICATION SCHEDULING (WRITE INTERFACE)]
+
+* Virtual Pin: V8
+  - Widget Type: Text Input / Time Input
+  - Data Type: String
+  - Placeholder: "HH:MM"
+  - Description: Asynchronous write stream allowing remote clinicians or caretakers 
+    to insert new medication alert boundaries for Compartment 1 directly from the cloud.
+
+* Virtual Pin: V9
+  - Widget Type: Text Input / Time Input
+  - Data Type: String
+  - Placeholder: "HH:MM"
+  - Description: Asynchronous write stream allowing remote clinicians or caretakers 
+    to insert new medication alert boundaries for Compartment 2 directly from the cloud.
+
+--------------------------------------------------------------------------------
+2. STEP-BY-STEP BLUEPRINT: BLYNK EVENT MANAGEMENT & PUSH NOTIFICATIONS
+--------------------------------------------------------------------------------
+To achieve full loop communication between the Raspberry Pi Pico W edge node and 
+the mobile phone, follow this rigorous step-by-step procedure to define events 
+and tie them to mobile device push alerts:
+
+STEP 1: DEFINE HARDWARE EVENT TRIGGERS IN BLYNK CONSOLE
+1. Navigate to the Blynk Web Console and open your Template settings.
+2. Select the "Events" tab on the top horizontal options menu.
+3. Click "+ Add New Event" to initialize a customized alert trigger.
+4. Name the event codes exactly as specified in the PyRTOS network task:
+   - Event 1 Name: "Box 1 Alarm Active" -> Set Event Code to: box_1_alarm
+   - Event 2 Name: "Box 2 Alarm Active" -> Set Event Code to: box_2_alarm
+5. Set the Event Type to "Critical" or "Warning" to grant it strict visual priority 
+   on mobile devices.
+
+STEP 2: ENABLE THE Cloud-to-Mobile NOTIFICATION ENGINE
+1. While still inside the specific Event Configuration pane, navigate to the 
+   "Notifications" sub-tab.
+2. Turn ON the toggle switch labeled "Send push notifications to mobile app".
+3. Set the Notification delivery target parameter to "Device Owner" or "All Users 
+   with access to the device".
+4. Compose the dynamic alert message body that will display on the phone screen:
+   - Message for box_1_alarm: "⚠️ Critical: Medication window has arrived for Box 1! Please tap sensor to open."
+   - Message for box_2_alarm: "⚠️ Critical: Medication window has arrived for Box 2! Please tap sensor to open."
+5. Click "Save" and make sure to click "Save Template" at the top right to flash 
+   the cloud broker configurations.
+
+STEP 3: MOBILE INTERFACE ACTIVATION
+1. Open the Blynk IoT mobile application on your iOS or Android device.
+2. Enter the Template layout editor, tap on the Developer Settings gear icon, 
+   and make sure that "Notifications" are globally allowed for the app within 
+   your phone's Operating System settings.
+3. Once the hardware invokes the explicit cloud API web hook rule via:
+   "http://blynk.cloud/external/api/logEvent?token={TOKEN}&code=box_1_alarm"
+   The cloud engine immediately routes the push payload to your smartphone system 
+   tray instantly, ensuring absolute medical reporting stability.
+
+================================================================================
+                          END OF ARCHIVE DOCUMENT
+================================================================================
